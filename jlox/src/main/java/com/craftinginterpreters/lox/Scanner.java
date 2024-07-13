@@ -70,10 +70,49 @@ public class Scanner {
       case '*':
         addToken(STAR);
         break;
+
+      // the following cases implement two-char lexemes
+      // if the next char is the second-part -> create a new token of that type
+      case '!':
+        addToken(matchNext('=') ? BANG_EQUAL : BANG);
+        break;
+      case '=':
+        addToken(matchNext('=') ? EQUAL_EQUAL : EQUAL);
+        break;
+      case '<':
+        addToken(matchNext('=') ? LESS_EQUAL : LESS);
+        break;
+      case '>':
+        addToken(matchNext('=') ? GREATER_EQUAL : GREATER);
+        break;
+
+      // the '/' operator is more complicated since comment lines can begin with that
+      // as well
+      case '/':
+        if (matchNext('/')) {
+          // this causes lines starting with '//' to be ignored!
+          while (peek() != '\n' && !isAtEnd()) {
+            nextToken();
+          }
+        } else {
+          addToken(SLASH);
+        }
+        break;
+
+      case ' ':
+      case '\r':
+      case '\t':
+        break;
+
+      case '\n':
+        line++;
+        break;
+
       default:
         Lox.error(line, String.format("Unexpected character '%s'", c));
         break;
     }
+
   }
 
   /*
@@ -95,4 +134,24 @@ public class Scanner {
     String text = source.substring(start, current);
     tokens.add(new Token(ttype, text, literal, line));
   }
+
+  private boolean matchNext(char expected) {
+    if (isAtEnd())
+      return false;
+    if (source.charAt(current) != expected)
+      return false;
+
+    // the next character matched!
+    // so we can advance the pointer and return a true
+    current++;
+    return true;
+  }
+
+  /**
+   * Lookahead: get the next character (or EOF) without advancing the position
+   */
+  private char peek() {
+    return isAtEnd() ? '\0' : source.charAt(current);
+  }
+
 }
