@@ -113,7 +113,11 @@ public class Scanner {
         break;
 
       default:
-        Lox.error(line, String.format("Unexpected character '%s'", c));
+        if (isDigit(c)) {
+          handleNumber();
+        } else {
+          Lox.error(line, String.format("Unexpected character '%s'", c));
+        }
         break;
     }
 
@@ -138,6 +142,21 @@ public class Scanner {
 
     String literalValue = source.substring(start + 1, current - 1); // start and current point at the '"' respectively
     addToken(STRING, literalValue);
+  }
+
+  private void handleNumber() {
+    while (isDigit(peek())) {
+      nextToken();
+    }
+
+    if (peek() == '.' && isDigit(peek(1))) {
+      nextToken();
+      while (isDigit(peek())) {
+        nextToken();
+      }
+    }
+
+    addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
   }
 
   /*
@@ -177,6 +196,16 @@ public class Scanner {
    */
   private char peek() {
     return isAtEnd() ? '\0' : source.charAt(current);
+  }
+
+  private char peek(int offset) {
+    if (current + offset >= source.length())
+      return '\0';
+    return source.charAt(current + offset);
+  }
+
+  private boolean isDigit(char c) {
+    return c >= '0' && c <= '9';
   }
 
 }
