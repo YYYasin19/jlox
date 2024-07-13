@@ -13,14 +13,14 @@ public class Lox {
   static boolean hadError = false;
 
   public static void main(String[] args) throws IOException {
-    System.out.println("Starting up!");
+    System.out.println("☀☀☀ Starting the Lox Interpeter ☀☀☀");
     if (args.length > 1) {
       System.out.println("Usage: jlox [script]");
       System.exit(64);
     } else if (args.length == 1) {
-      // runFile(args[0]);
+      runFile(args[0]);
     } else {
-      // runPrompt();
+      runPrompt();
     }
   }
 

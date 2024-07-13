@@ -137,6 +137,8 @@ public class Scanner {
       default:
         if (isDigit(c)) {
           handleNumber();
+        } else if (isAlpha(c)) {
+          handleIdentifierKeyword();
         } else {
           Lox.error(line, String.format("Unexpected character '%s'", c));
         }
@@ -181,7 +183,7 @@ public class Scanner {
     addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
   }
 
-  private void handleIdentifier() {
+  private void handleIdentifierKeyword() {
     while (isAlphaNumeric(peek())) {
       nextToken();
     }
