@@ -51,7 +51,7 @@ public class Lox {
 
   private static void run(String loxSource) {
     Scanner scanner = new Scanner(loxSource);
-    List<Token> tokens = scanner.scanTokens();
+    List<Token> tokens = scanner.scan();
 
     for (Token token : tokens) {
       System.out.println(token);
