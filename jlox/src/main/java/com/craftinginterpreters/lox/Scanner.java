@@ -99,13 +99,17 @@ public class Scanner {
         }
         break;
 
+      // ignore whitespace
       case ' ':
       case '\r':
       case '\t':
         break;
-
       case '\n':
         line++;
+        break;
+
+      case '"':
+        handleStringLiteral();
         break;
 
       default:
@@ -113,6 +117,27 @@ public class Scanner {
         break;
     }
 
+  }
+
+  private void handleStringLiteral() {
+    while (peek() != '"' && !isAtEnd()) {
+      if (peek() == '\n')
+        line++; // this could be a multi-line string -> increase the line counter
+      nextToken(); // advances the pointer, consumes characters
+    }
+
+    // we're now either at the end or the closing '"'
+
+    if (isAtEnd()) {
+      Lox.error(line, "Unterminated String literal");
+      return;
+    }
+
+    // The next character is the closing '"'
+    nextToken();
+
+    String literalValue = source.substring(start + 1, current - 1); // start and current point at the '"' respectively
+    addToken(STRING, literalValue);
   }
 
   /*
