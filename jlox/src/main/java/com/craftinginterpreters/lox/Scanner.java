@@ -17,6 +17,28 @@ public class Scanner {
   // bookkeeping for the scanning process
   private int start, current, line = 0;
 
+  private static final Map<String, TokenType> keywords;
+
+  static {
+    keywords = new HashMap<>();
+    keywords.put("and", AND);
+    keywords.put("class", CLASS);
+    keywords.put("else", ELSE);
+    keywords.put("false", FALSE);
+    keywords.put("for", FOR);
+    keywords.put("fun", FUN);
+    keywords.put("if", IF);
+    keywords.put("nil", NIL);
+    keywords.put("or", OR);
+    keywords.put("print", PRINT);
+    keywords.put("return", RETURN);
+    keywords.put("super", SUPER);
+    keywords.put("this", THIS);
+    keywords.put("true", TRUE);
+    keywords.put("var", VAR);
+    keywords.put("while", WHILE);
+  }
+
   Scanner(String source) {
     this.source = source;
   }
@@ -159,6 +181,23 @@ public class Scanner {
     addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
   }
 
+  private void handleIdentifier() {
+    while (isAlphaNumeric(peek())) {
+      nextToken();
+    }
+
+    String identifierText = source.substring(start, current);
+    TokenType ttype = keywords.get(identifierText);
+
+    // if the text (e.g. 'orchid') did not match any reserved keywords, view it is
+    // as a name
+    if (ttype == null) {
+      ttype = IDENTIFIER;
+    }
+
+    addToken(ttype);
+  }
+
   /*
    * Retrieve next token and advance pointer
    */
@@ -208,4 +247,13 @@ public class Scanner {
     return c >= '0' && c <= '9';
   }
 
+  private boolean isAlpha(char c) {
+    return (c >= 'a' && c <= 'z') ||
+        (c >= 'A' && c <= 'Z') ||
+        c == '_';
+  }
+
+  private boolean isAlphaNumeric(char c) {
+    return isAlpha(c) || isDigit(c);
+  }
 }
