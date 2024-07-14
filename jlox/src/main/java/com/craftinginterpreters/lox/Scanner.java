@@ -107,7 +107,12 @@ public class Scanner {
       case '>':
         addToken(matchNext('=') ? GREATER_EQUAL : GREATER);
         break;
-
+      // case '?':
+      // addToken(QUESTION_MARK);
+      // break;
+      // case ':':
+      // addToken(COLON);
+      // break;
       // the '/' operator is more complicated since comment lines can begin with that
       // as well
       case '/':

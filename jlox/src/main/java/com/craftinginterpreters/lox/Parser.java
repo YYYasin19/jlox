@@ -41,6 +41,16 @@ class Parser {
       expr = new Expr.Binary(expr, operator, right);
     }
 
+    // custom logic for the ternary operator
+    // TODO: Add a Expr.ConditionalExpr(cond, left, right) type to the syntax tree
+    // if (peek().type == QUESTION_MARK) {
+    // advance(); // skip the question mark
+    // Expr leftExpr = expression();
+    // Token colon = consume(COLON, "Expected ':' in Ternary expression");
+    // Expr rightExpr = expression();
+    // return new Expr.Binary(leftExpr, colon, rightExpr);
+    // }
+
     return expr; // either a comparison (e.g. 1 == 2) or a binary expression of a comparison and
                  // something else
   }
