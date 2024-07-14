@@ -1,11 +1,11 @@
-package com.craftinginterpreters.lox;
+package com.jlox.lox;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.craftinginterpreters.lox.TokenType.*;
+import static com.jlox.lox.TokenType.*;
 
 /**
  * Given a valid .lox source file, tokenizes the source

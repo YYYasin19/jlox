@@ -1,4 +1,4 @@
-package com.craftinginterpreters.lox;
+package com.jlox.lox;
 
 /*
  * Each token is represented by a string in the source (the lexeme) and where this string was found (e.g. for error handling)

@@ -1,4 +1,4 @@
-package com.craftinginterpreters.lox;
+package com.jlox.lox;
 
 /*
  * Enum of all allowed types of tokens (i.e. reserved keywords)

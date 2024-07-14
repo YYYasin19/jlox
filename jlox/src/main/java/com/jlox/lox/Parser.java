@@ -1,8 +1,8 @@
-package com.craftinginterpreters.lox;
+package com.jlox.lox;
 
 import java.util.List;
 
-import static com.craftinginterpreters.lox.TokenType.*;
+import static com.jlox.lox.TokenType.*;
 
 class Parser {
 

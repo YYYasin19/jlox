@@ -1,4 +1,4 @@
-package com.craftinginterpreters.lox;
+package com.jlox.lox;
 
 /*
  * A visitor with a return-type of 'Object' for each node
