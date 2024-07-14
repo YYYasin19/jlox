@@ -10,9 +10,21 @@ import java.util.List;
 
 public class Lox {
 
+  private static boolean debugMode = false;
   static boolean hadError = false;
+  static boolean hadRuntimeError = false;
+
+  private static Interpreter interpreter = new Interpreter();
 
   public static void main(String[] args) throws IOException {
+
+    // set debug mode
+    String debugEnv = System.getenv("LOX_DEBUG");
+    if (debugEnv != null && debugEnv.equals("1")) {
+      debugMode = true;
+      System.out.println("Debug mode activated. Expressions in REPL will show the AST");
+    }
+
     System.out.println("☀☀☀ Starting the Lox Interpeter ☀☀☀");
     if (args.length > 1) {
       System.out.println("Usage: jlox [script]");
@@ -32,6 +44,8 @@ public class Lox {
     run(new String(bytes, Charset.defaultCharset()));
     if (hadError)
       System.exit(65);
+    if (hadRuntimeError)
+      System.exit(70);
   }
 
   private static void runPrompt() throws IOException {
@@ -59,11 +73,19 @@ public class Lox {
     if (hadError)
       return;
 
-    System.out.println(new AstPrinter().print(expr));
+    if (debugMode)
+      System.out.println(String.format("AST: %s", new AstPrinter().print(expr)));
+
+    interpreter.interpret(expr);
   }
 
   static void error(int line, String msg) {
     report(line, "", msg);
+  }
+
+  static void runtimeError(RuntimeError re) {
+    System.err.println(String.format("line %d: %s", re.token.line, re.getMessage()));
+    hadRuntimeError = true;
   }
 
   private static void report(int line, String where, String msg) {

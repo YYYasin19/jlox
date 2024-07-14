@@ -35,7 +35,7 @@ class Parser {
   private Expr equality() {
     Expr expr = comparison();
 
-    while (matchAndAdvance(BANG_EQUAL, EQUAL_EQUAL)) {
+    while (matchAndAdvance(BANG_EQUAL, EQUAL_EQUAL, AND, OR)) {
       Token operator = prevToken();
       Expr right = comparison();
       expr = new Expr.Binary(expr, operator, right);
