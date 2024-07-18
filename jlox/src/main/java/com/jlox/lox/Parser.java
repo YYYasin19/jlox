@@ -38,6 +38,29 @@ class Parser {
     return equality();
   }
 
+  private Stmt declaration() {
+    try {
+      if (matchAndAdvance(VAR))
+        return varDeclaration();
+      return statement(); // parse regular statement and print expression
+    } catch (ParseError error) {
+      synchronize();
+      return null;
+    }
+  }
+
+  private Stmt varDeclaration() {
+    Token name = consume(IDENTIFIER, "Expected variable name");
+
+    Expr init = null;
+    if (matchAndAdvance(EQUAL)) {
+      init = expression();
+    }
+
+    consume(SEMICOLON, "Expected ';' after variable declaration");
+    return new Stmt.Var(name, init);
+  }
+
   /*
    * statement → exprStmt | printStmt ;
    * exprStmt → expression ";" ;
@@ -154,6 +177,10 @@ class Parser {
 
     if (matchAndAdvance(NUMBER, STRING)) {
       return new Expr.Literal(prevToken().literal);
+    }
+
+    if (matchAndAdvance(IDENTIFIER)) {
+      return new Expr.Variable(prevToken());
     }
 
     if (matchAndAdvance(LEFT_PAR)) {
