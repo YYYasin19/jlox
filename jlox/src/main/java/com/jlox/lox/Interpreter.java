@@ -1,17 +1,33 @@
 package com.jlox.lox;
 
-/*
- * A visitor with a return-type of 'Object' for each node
- */
-class Interpreter implements Expr.Visitor<Object> {
+import java.util.List;
 
-  void interpret(Expr expression) {
+class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
+
+  void interpret(List<Stmt> statements) {
     try {
-      Object value = evaluate(expression);
-      System.out.println(stringify(value));
+      for (Stmt stmt : statements) {
+        execStatement(stmt);
+      }
     } catch (RuntimeError re) {
       Lox.runtimeError(re);
     }
+  }
+
+  private void execStatement(Stmt stmt) {
+    stmt.accept(this);
+  }
+
+  @Override
+  public Void visitExpressionStmt(Stmt.Expression stmt) {
+    evaluate(stmt.expression);
+    return null; // we need to fulfill the signature
+  }
+
+  @Override
+  public Void visitPrintStmt(Stmt.Print stmt) {
+    System.out.println(evaluate(stmt.expression));
+    return null;
   }
 
   @Override

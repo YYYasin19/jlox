@@ -1,12 +1,13 @@
 package com.jlox.lox;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.jlox.lox.TokenType.*;
 
 class Parser {
 
-  private static class ParseError extends RuntimeException {
+  public static class ParseError extends RuntimeException {
   }
 
   private final List<Token> tokens;
@@ -16,7 +17,7 @@ class Parser {
     this.tokens = tokens;
   }
 
-  Expr parse() {
+  Expr parseExpression() {
     try {
       return expression(); // starting point
     } catch (ParseError error) {
@@ -24,8 +25,41 @@ class Parser {
     }
   }
 
+  List<Stmt> parseStatements() {
+    List<Stmt> statements = new ArrayList<>();
+    while (!isAtEnd()) {
+      statements.add(statement());
+    }
+
+    return statements;
+  }
+
   private Expr expression() {
     return equality();
+  }
+
+  /*
+   * statement → exprStmt | printStmt ;
+   * exprStmt → expression ";" ;
+   * printStmt → "print" expression ";" ;
+   */
+  private Stmt statement() {
+    if (matchAndAdvance(PRINT)) // matches and skips the print statement (i.e. 'print')
+      return printStatement();
+
+    return expressionStatement();
+  }
+
+  private Stmt.Print printStatement() {
+    Expr value = expression();
+    consume(SEMICOLON, "Expected semicolon after print statement");
+    return new Stmt.Print(value);
+  }
+
+  private Stmt.Expression expressionStatement() {
+    Expr expr = expression();
+    consume(SEMICOLON, "Expected semicolon after expression statement");
+    return new Stmt.Expression(expr);
   }
 
   /*

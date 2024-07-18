@@ -58,7 +58,11 @@ public class Lox {
       String line = reader.readLine();
       if (line == null)
         break;
-      run(line);
+      try {
+        run(line);
+      } catch (Parser.ParseError pe) {
+        System.err.println(pe.getMessage());
+      }
       hadError = false; // reset the error flag after every successful line
     }
   }
@@ -68,15 +72,12 @@ public class Lox {
     List<Token> tokens = scanner.scan();
 
     Parser parser = new Parser(tokens);
-    Expr expr = parser.parse();
+    List<Stmt> statements = parser.parseStatements();
 
     if (hadError)
       return;
 
-    if (debugMode)
-      System.out.println(String.format("AST: %s", new AstPrinter().print(expr)));
-
-    interpreter.interpret(expr);
+    interpreter.interpret(statements);
   }
 
   static void error(int line, String msg) {

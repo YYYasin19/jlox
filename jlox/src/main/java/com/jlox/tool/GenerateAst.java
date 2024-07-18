@@ -1,4 +1,4 @@
-package com.craftinginterpreters.tool;
+package com.jlox.tool;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -18,6 +18,10 @@ public class GenerateAst {
         "Grouping: Expr expression",
         "Literal: Object value",
         "Unary: Token operator, Expr right"));
+
+    defineAst(outputDir, "Stmt", Arrays.asList(
+        "Expression: Expr expression",
+        "Print: Expr expression"));
   }
 
   /*
@@ -27,7 +31,7 @@ public class GenerateAst {
     String path = String.format("%s/%s.java", outputDir, baseName);
     PrintWriter writer = new PrintWriter(path, "utf-8");
 
-    writer.println("package com.craftinginterpreters.lox;");
+    writer.println("package com.jlox.lox;");
     writer.println();
     writer.println("import java.util.List;");
     writer.println();
