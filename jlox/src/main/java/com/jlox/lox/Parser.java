@@ -35,7 +35,7 @@ class Parser {
   }
 
   private Expr expression() {
-    return equality();
+    return assignment();
   }
 
   private Stmt declaration() {
@@ -83,6 +83,30 @@ class Parser {
     Expr expr = expression();
     consume(SEMICOLON, "Expected semicolon after expression statement");
     return new Stmt.Expression(expr);
+  }
+
+  /*
+   * expression → assignment ;
+   * assignment → IDENTIFIER "=" assignment | equality ;
+   */
+  private Expr assignment() {
+    Expr expr = equality(); // parse the left-hand side -- without knowing what it is!
+
+    if (matchAndAdvance(EQUAL)) {
+      Token eq = prevToken();
+      Expr rvalue = assignment();
+
+      // check if l-value was a valid assignment target
+      // currently, this is only a single variable target, e.g. a = 5
+      if (expr instanceof Expr.Variable) {
+        Token variableName = ((Expr.Variable) expr).name;
+        return new Expr.Assign(variableName, rvalue);
+      }
+
+      error(eq, String.format("Invalid assignment target: %s", expr.toString()));
+    }
+
+    return expr;
   }
 
   /*

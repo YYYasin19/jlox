@@ -6,6 +6,10 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
   private Environment env = new Environment();
 
+  String getEnvStringRepr() {
+    return env.getStringRepr();
+  }
+
   void interpret(List<Stmt> statements) {
     try {
       for (Stmt stmt : statements) {
@@ -18,6 +22,13 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
   private void execStatement(Stmt stmt) {
     stmt.accept(this);
+  }
+
+  @Override
+  public Object visitAssignExpr(Expr.Assign expr) {
+    Object evalValue = evaluate(expr.value);
+    env.assign(expr.name, evalValue);
+    return evalValue;
   }
 
   @Override

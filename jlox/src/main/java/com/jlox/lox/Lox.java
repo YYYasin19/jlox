@@ -60,6 +60,9 @@ public class Lox {
         break;
       try {
         run(line);
+        if (debugMode) {
+          System.out.println(String.format("Env: %s", interpreter.getEnvStringRepr()));
+        }
       } catch (Parser.ParseError pe) {
         System.err.println(pe.getMessage());
       }
