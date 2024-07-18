@@ -4,6 +4,8 @@ import java.util.List;
 
 class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
+  private Environment env = new Environment();
+
   void interpret(List<Stmt> statements) {
     try {
       for (Stmt stmt : statements) {
@@ -16,6 +18,22 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
   private void execStatement(Stmt stmt) {
     stmt.accept(this);
+  }
+
+  @Override
+  public Void visitVarStmt(Stmt.Var stmt) {
+    Object value = null;
+    if (stmt.initializer != null) {
+      value = evaluate(stmt.initializer);
+    }
+
+    env.define(stmt.name.lexeme, value);
+    return null;
+  }
+
+  @Override
+  public Object visitVariableExpr(Expr.Variable expr) {
+    return env.get(expr.name);
   }
 
   @Override

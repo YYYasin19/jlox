@@ -28,7 +28,7 @@ class Parser {
   List<Stmt> parseStatements() {
     List<Stmt> statements = new ArrayList<>();
     while (!isAtEnd()) {
-      statements.add(statement());
+      statements.add(declaration());
     }
 
     return statements;
