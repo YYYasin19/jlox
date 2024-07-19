@@ -22,7 +22,7 @@ public class Lox {
     String debugEnv = System.getenv("LOX_DEBUG");
     if (debugEnv != null && debugEnv.equals("1")) {
       debugMode = true;
-      System.out.println("Debug mode activated. Expressions in REPL will show the AST");
+      System.out.println("Debug mode activated.");
     }
 
     System.out.println("☀☀☀ Starting the Lox Interpeter ☀☀☀");
@@ -42,6 +42,7 @@ public class Lox {
   private static void runFile(String path) throws IOException {
     byte[] bytes = Files.readAllBytes(Paths.get(path));
     run(new String(bytes, Charset.defaultCharset()));
+
     if (hadError)
       System.exit(65);
     if (hadRuntimeError)
@@ -54,10 +55,11 @@ public class Lox {
 
     // forever loop
     for (;;) {
-      System.out.println(">> ");
+      System.out.print(">> ");
       String line = reader.readLine();
       if (line == null)
         break;
+
       try {
         run(line);
         if (debugMode) {
@@ -66,6 +68,7 @@ public class Lox {
       } catch (Parser.ParseError pe) {
         System.err.println(pe.getMessage());
       }
+
       hadError = false; // reset the error flag after every successful line
     }
   }

@@ -70,7 +70,23 @@ class Parser {
     if (matchAndAdvance(PRINT)) // matches and skips the print statement (i.e. 'print')
       return printStatement();
 
+    if (matchAndAdvance(LEFT_BRACE)) {
+      return new Stmt.Block(block());
+    }
+
     return expressionStatement();
+  }
+
+  private List<Stmt> block() {
+    List<Stmt> statements = new ArrayList<>();
+
+    // until the end of the block '}' parse new statements | delarations
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
+      statements.add(declaration());
+    }
+
+    consume(RIGHT_BRACE, "Expected '}' at the end of a block");
+    return statements;
   }
 
   private Stmt.Print printStatement() {

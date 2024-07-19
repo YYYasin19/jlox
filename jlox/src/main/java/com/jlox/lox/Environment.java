@@ -5,7 +5,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 class Environment {
+
+  private final Environment parentEnv; // reference to the parent-environment
   private final Map<String, Object> values = new HashMap<>();
+
+  Environment() {
+    this.parentEnv = null;
+  }
+
+  Environment(Environment parent) {
+    this.parentEnv = parent;
+  }
 
   String getStringRepr() {
     return values.keySet().stream()
@@ -23,12 +33,20 @@ class Environment {
       return values.get(name.lexeme);
     }
 
+    if (parentEnv != null)
+      return parentEnv.get(name);
+
     throw new RuntimeError(name, String.format("Tried to access undefined variable %s", name.lexeme));
   }
 
   void assign(Token name, Object value) {
     if (values.containsKey(name.lexeme)) {
       values.put(name.lexeme, value);
+      return;
+    }
+
+    if (parentEnv != null) {
+      parentEnv.assign(name, value);
       return;
     }
 

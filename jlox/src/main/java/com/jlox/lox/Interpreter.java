@@ -25,6 +25,14 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
   }
 
   @Override
+  public Void visitBlockStmt(Stmt.Block stmt) {
+
+    // eval the block passing the current env down (as a lookup for variables)
+    evaluateBlock(stmt.statements, new Environment(env));
+    return null;
+  }
+
+  @Override
   public Object visitAssignExpr(Expr.Assign expr) {
     Object evalValue = evaluate(expr.value);
     env.assign(expr.name, evalValue);
@@ -141,6 +149,21 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
   private Object evaluate(Expr expr) {
     return expr.accept(this); // will call this Visitor again with the appropriate type
+  }
+
+  void evaluateBlock(List<Stmt> statements, Environment blockEnv) {
+    Environment prevEnv = this.env;
+
+    // execute all statements in this block using the given environment
+    try {
+      this.env = blockEnv; // this env has a ref to the parent (prev) env
+      for (Stmt stmt : statements) {
+        execStatement(stmt);
+      }
+      // then revert back to the original environment
+    } finally {
+      this.env = prevEnv;
+    }
   }
 
   private boolean isTruthy(Object obj) {
