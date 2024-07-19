@@ -8,6 +8,8 @@ abstract class Stmt {
 
     R visitExpressionStmt(Expression stmt);
 
+    R visitIfStmt(If stmt);
+
     R visitPrintStmt(Print stmt);
 
     R visitVarStmt(Var stmt);
@@ -37,6 +39,23 @@ abstract class Stmt {
     }
 
     final Expr expression;
+  }
+
+  static class If extends Stmt {
+    If(Expr cond, Stmt thenBranch, Stmt elseBranch) {
+      this.cond = cond;
+      this.thenBranch = thenBranch;
+      this.elseBranch = elseBranch;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitIfStmt(this);
+    }
+
+    final Expr cond;
+    final Stmt thenBranch;
+    final Stmt elseBranch;
   }
 
   static class Print extends Stmt {

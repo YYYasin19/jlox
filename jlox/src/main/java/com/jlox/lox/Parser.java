@@ -67,6 +67,10 @@ class Parser {
    * printStmt → "print" expression ";" ;
    */
   private Stmt statement() {
+
+    if (matchAndAdvance(IF))
+      return ifStatement();
+
     if (matchAndAdvance(PRINT)) // matches and skips the print statement (i.e. 'print')
       return printStatement();
 
@@ -75,6 +79,20 @@ class Parser {
     }
 
     return expressionStatement();
+  }
+
+  private Stmt.If ifStatement() {
+    consume(LEFT_PAR, "Expected '(' after 'if'");
+    Expr cond = expression();
+    consume(RIGHT_PAR, "Expeceted ')' after condition in if-Statement");
+
+    Stmt thenBranch = statement();
+    Stmt elseBranch = null;
+    if (matchAndAdvance(ELSE)) {
+      elseBranch = statement();
+    }
+
+    return new Stmt.If(cond, thenBranch, elseBranch);
   }
 
   private List<Stmt> block() {

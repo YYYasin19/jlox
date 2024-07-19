@@ -24,6 +24,15 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
     stmt.accept(this);
   }
 
+  public Void visitIfStmt(Stmt.If stmt) {
+    if (isTruthy(evaluate(stmt.cond))) {
+      execStatement(stmt.thenBranch);
+    } else if (stmt.thenBranch != null) {
+      execStatement(stmt.elseBranch);
+    }
+    return null;
+  }
+
   @Override
   public Void visitBlockStmt(Stmt.Block stmt) {
 
@@ -171,7 +180,7 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
       return false;
     if (obj instanceof Boolean)
       return (boolean) obj;
-    return true;
+    return false;
   }
 
   private boolean isEqual(Object a, Object b) {
