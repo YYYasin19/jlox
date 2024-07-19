@@ -1,6 +1,7 @@
 package com.jlox.lox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.jlox.lox.TokenType.*;
@@ -68,6 +69,9 @@ class Parser {
    */
   private Stmt statement() {
 
+    if (matchAndAdvance(FOR))
+      return forStatement();
+
     if (matchAndAdvance(IF))
       return ifStatement();
 
@@ -82,6 +86,58 @@ class Parser {
     }
 
     return expressionStatement();
+  }
+
+  /*
+   * forStmt → "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression?
+   * ")" statement ;
+   */
+  private Stmt forStatement() {
+    consume(LEFT_PAR, "Expect '(' after 'for'");
+    Stmt init;
+    if (matchAndAdvance(SEMICOLON)) {
+      init = null; // no variable init, e.g. for (; ...) {...}
+    } else if (matchAndAdvance(VAR)) {
+      init = varDeclaration(); // for (var i = 5;;)
+    } else {
+      init = expressionStatement(); // for (i = 0)
+    }
+
+    Expr cond = null;
+    // if the next token is not directly a semi-colon, try to parse an expression
+    // here
+    if (!check(SEMICOLON)) {
+      cond = expression();
+    }
+    consume(SEMICOLON, "Expected a ';' after for loop condition expression");
+
+    Expr inc = null;
+    if (!check(RIGHT_PAR)) {
+      inc = expression();
+    }
+    consume(RIGHT_PAR, "Expected a ')' after increment expression of for loop");
+
+    Stmt body = statement();
+
+    // desugaring: there is no for loop block, we instead create the AST for a while
+    // loop
+    if (inc != null) {
+      // create a new body where at the end, the increment is executed
+      body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(inc)));
+    }
+
+    // create a while loop where the cond for re-running it is the same as the for
+    // loop
+    if (cond == null)
+      cond = new Expr.Literal(true);
+
+    body = new Stmt.While(cond, body);
+
+    if (init != null) {
+      body = new Stmt.Block(Arrays.asList(init, body));
+    }
+
+    return body;
   }
 
   private Stmt.If ifStatement() {
