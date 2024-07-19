@@ -74,6 +74,9 @@ class Parser {
     if (matchAndAdvance(PRINT)) // matches and skips the print statement (i.e. 'print')
       return printStatement();
 
+    if (matchAndAdvance(WHILE))
+      return whileStatement();
+
     if (matchAndAdvance(LEFT_BRACE)) {
       return new Stmt.Block(block());
     }
@@ -111,6 +114,15 @@ class Parser {
     Expr value = expression();
     consume(SEMICOLON, "Expected semicolon after print statement");
     return new Stmt.Print(value);
+  }
+
+  private Stmt.While whileStatement() {
+    consume(LEFT_PAR, "Expected '(' after 'while'");
+    Expr cond = expression();
+    consume(RIGHT_PAR, "Expected ')' after condition expression of while statement");
+    Stmt body = statement();
+
+    return new Stmt.While(cond, body);
   }
 
   private Stmt.Expression expressionStatement() {

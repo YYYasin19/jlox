@@ -35,6 +35,15 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
   }
 
   @Override
+  public Void visitWhileStmt(Stmt.While stmt) {
+    while (isTruthy(evaluate(stmt.cond))) {
+      execStatement(stmt.body);
+    }
+
+    return null;
+  }
+
+  @Override
   public Object visitLogicalExpr(Expr.Logical expr) {
     Object leftResult = evaluate(expr.left);
 
