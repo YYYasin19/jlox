@@ -24,6 +24,7 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
     stmt.accept(this);
   }
 
+  @Override
   public Void visitIfStmt(Stmt.If stmt) {
     if (isTruthy(evaluate(stmt.cond))) {
       execStatement(stmt.thenBranch);
@@ -31,6 +32,22 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
       execStatement(stmt.elseBranch);
     }
     return null;
+  }
+
+  @Override
+  public Object visitLogicalExpr(Expr.Logical expr) {
+    Object leftResult = evaluate(expr.left);
+
+    if (expr.operator.type == TokenType.OR) {
+      // OR
+      if (isTruthy(leftResult))
+        return leftResult;
+    } else { // AND
+      if (!isTruthy(leftResult))
+        return leftResult;
+    }
+
+    return evaluate(expr.right);
   }
 
   @Override
@@ -143,12 +160,12 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
         return !isEqual(left, right);
       case EQUAL_EQUAL:
         return isEqual(left, right);
-      case OR:
-        checkBooleanOperands(expr.operator, left, right);
-        return (boolean) left || (boolean) right;
-      case AND:
-        checkBooleanOperands(expr.operator, left, right);
-        return (boolean) left && (boolean) right;
+      // case OR:
+      // checkBooleanOperands(expr.operator, left, right);
+      // return (boolean) left || (boolean) right;
+      // case AND:
+      // checkBooleanOperands(expr.operator, left, right);
+      // return (boolean) left && (boolean) right;
       default:
         throw new RuntimeException(
             String.format("Unsupported Operator for Binary expression: %s", expr.operator.lexeme));
@@ -180,7 +197,7 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
       return false;
     if (obj instanceof Boolean)
       return (boolean) obj;
-    return false;
+    return true;
   }
 
   private boolean isEqual(Object a, Object b) {

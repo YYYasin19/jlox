@@ -124,7 +124,7 @@ class Parser {
    * assignment → IDENTIFIER "=" assignment | equality ;
    */
   private Expr assignment() {
-    Expr expr = equality(); // parse the left-hand side -- without knowing what it is!
+    Expr expr = or(); // parse the left-hand side -- without knowing what it is!
 
     if (matchAndAdvance(EQUAL)) {
       Token eq = prevToken();
@@ -143,6 +143,30 @@ class Parser {
     return expr;
   }
 
+  private Expr or() {
+    Expr expr = and();
+
+    while (matchAndAdvance(OR)) {
+      Token op = prevToken();
+      Expr right = and();
+      expr = new Expr.Logical(expr, op, right);
+    }
+
+    return expr;
+  }
+
+  private Expr and() {
+    Expr expr = equality();
+
+    while (matchAndAdvance(AND)) {
+      Token op = prevToken();
+      Expr right = equality();
+      expr = new Expr.Logical(expr, op, right);
+    }
+
+    return expr;
+  }
+
   /*
    * Rule:
    * equality → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -150,7 +174,7 @@ class Parser {
   private Expr equality() {
     Expr expr = comparison();
 
-    while (matchAndAdvance(BANG_EQUAL, EQUAL_EQUAL, AND, OR)) {
+    while (matchAndAdvance(BANG_EQUAL, EQUAL_EQUAL)) {
       Token operator = prevToken();
       Expr right = comparison();
       expr = new Expr.Binary(expr, operator, right);
