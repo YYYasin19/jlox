@@ -1,10 +1,35 @@
 package com.jlox.lox;
 
 import java.util.List;
+import java.util.ArrayList;
+
+class ClockFn implements LoxCallable {
+  @Override
+  public int arity() {
+    return 0;
+  }
+
+  @Override
+  public Object call(Interpreter interpreter,
+      List<Object> arguments) {
+    return (double) System.currentTimeMillis() / 1000.0;
+  }
+
+  @Override
+  public String toString() {
+    return "<native fn>";
+  }
+}
 
 class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
-  private Environment env = new Environment();
+  boolean debugMode = false;
+  final Environment globals = new Environment();
+  private Environment env = globals; // env is a pointer to the current env, global always references the global env
+
+  Interpreter() {
+    globals.define("clock", new ClockFn());
+  }
 
   String getEnvStringRepr() {
     return env.getStringRepr();
@@ -28,10 +53,29 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
   public Void visitIfStmt(Stmt.If stmt) {
     if (isTruthy(evaluate(stmt.cond))) {
       execStatement(stmt.thenBranch);
-    } else if (stmt.thenBranch != null) {
+    } else if (stmt.elseBranch != null) {
       execStatement(stmt.elseBranch);
     }
     return null;
+  }
+
+  @Override
+  public Void visitFunStmt(Stmt.Fun stmt) {
+    // encountering a fun decl in the ast just registers that function in the
+    // environment
+    LoxFunction fun = new LoxFunction(stmt);
+    env.define(stmt.name.lexeme, fun);
+    return null;
+  }
+
+  @Override
+  public Void visitReturnStmt(Stmt.Return stmt) {
+    Object value = null;
+    if (stmt.value != null) {
+      value = evaluate(stmt.value);
+    }
+
+    throw new Return(value); // this will be caught by call()
   }
 
   @Override
@@ -57,6 +101,30 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
     }
 
     return evaluate(expr.right);
+  }
+
+  @Override
+  public Object visitCallExpr(Expr.Call expr) {
+    Object callee = evaluate(expr.callee); // e.g. a literal string ref to the function name or another function call
+
+    List<Object> args = new ArrayList<>();
+    for (Expr arg : expr.args) {
+      args.add(evaluate(arg));
+    }
+
+    if (!(callee instanceof LoxCallable)) {
+      throw new RuntimeError(expr.parenthesis, String.format("Can only call functions and classes, not '%s'", callee));
+    }
+
+    LoxCallable fun = (LoxCallable) callee;
+
+    // check argument size
+    if (args.size() != fun.arity()) {
+      throw new RuntimeError(expr.parenthesis,
+          String.format("Wrong number of arguments: %s instead of %s", args.size(), fun.arity()));
+    }
+
+    return fun.call(this, args);
   }
 
   @Override

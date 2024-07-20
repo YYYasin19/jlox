@@ -22,6 +22,7 @@ public class Lox {
     String debugEnv = System.getenv("LOX_DEBUG");
     if (debugEnv != null && debugEnv.equals("1")) {
       debugMode = true;
+      interpreter.debugMode = true;
       System.out.println("Debug mode activated.");
     }
 

@@ -41,6 +41,8 @@ class Parser {
 
   private Stmt declaration() {
     try {
+      if (matchAndAdvance(FUN))
+        return function("function");
       if (matchAndAdvance(VAR))
         return varDeclaration();
       return statement(); // parse regular statement and print expression
@@ -48,6 +50,32 @@ class Parser {
       synchronize();
       return null;
     }
+  }
+
+  /*
+   * fun myFun(a, b, c) { ... }
+   */
+  private Stmt.Fun function(String kind) {
+    Token name = consume(IDENTIFIER, String.format("Expected %s name after keyword", kind));
+    consume(LEFT_PAR, "Expected '(' after function name before parameter list");
+    List<Token> params = new ArrayList<>();
+    if (!check(RIGHT_PAR)) {
+      do {
+        if (params.size() >= 255) {
+          reportError(peek(), String.format("Function %s tries to define more than 255 parameters.", name.lexeme));
+        }
+
+        params.add(
+            consume(IDENTIFIER, "Expected paremeter name"));
+
+      } while (matchAndAdvance(COMMA));
+    }
+    consume(RIGHT_PAR, "Expected ')' after function param definition");
+
+    consume(LEFT_BRACE, "Expected '{' for body of function");
+    List<Stmt> body = block(); // this already parses the closing bracket
+
+    return new Stmt.Fun(name, params, body);
   }
 
   private Stmt varDeclaration() {
@@ -74,6 +102,9 @@ class Parser {
 
     if (matchAndAdvance(IF))
       return ifStatement();
+
+    if (matchAndAdvance(RETURN))
+      return returnStmt();
 
     if (matchAndAdvance(PRINT)) // matches and skips the print statement (i.e. 'print')
       return printStatement();
@@ -154,6 +185,7 @@ class Parser {
     return new Stmt.If(cond, thenBranch, elseBranch);
   }
 
+  // parse multiple statements + closing }
   private List<Stmt> block() {
     List<Stmt> statements = new ArrayList<>();
 
@@ -170,6 +202,17 @@ class Parser {
     Expr value = expression();
     consume(SEMICOLON, "Expected semicolon after print statement");
     return new Stmt.Print(value);
+  }
+
+  private Stmt.Return returnStmt() {
+    Token keyword = prevToken();
+    Expr value = null;
+    if (!check(SEMICOLON)) {
+      value = expression();
+    }
+
+    consume(SEMICOLON, "Expected ';' at the end of a return statement");
+    return new Stmt.Return(keyword, value);
   }
 
   private Stmt.While whileStatement() {
@@ -205,7 +248,7 @@ class Parser {
         return new Expr.Assign(variableName, rvalue);
       }
 
-      error(eq, String.format("Invalid assignment target: %s", expr.toString()));
+      reportError(eq, String.format("Invalid assignment target: %s", expr.toString()));
     }
 
     return expr;
@@ -314,7 +357,39 @@ class Parser {
       return new Expr.Unary(operator, right);
     }
 
-    return primary();
+    return call();
+  }
+
+  private Expr call() {
+    Expr expr = primary();
+
+    while (true) {
+      if (matchAndAdvance(LEFT_PAR)) {
+        expr = finishCall(expr);
+      } else {
+        break;
+      }
+    }
+
+    return expr;
+  }
+
+  private Expr finishCall(Expr callee) {
+    List<Expr> args = new ArrayList<>();
+
+    if (!check(RIGHT_PAR)) {
+      do {
+        if (args.size() >= 255) {
+          reportError(peek(),
+              "Can't have more than 255 arguments in Lox. Have you tried passing another data structure?");
+        }
+        args.add(expression());
+      } while (matchAndAdvance(COMMA));
+    }
+
+    Token parenthesis = consume(RIGHT_PAR, "Expected ')' after function call argument list");
+
+    return new Expr.Call(callee, parenthesis, args);
   }
 
   private Expr primary() {
@@ -339,7 +414,7 @@ class Parser {
       return new Expr.Grouping(expr);
     }
 
-    throw error(peek(), "Expect expression");
+    throw reportError(peek(), "Expect expression");
   }
 
   private boolean matchAndAdvance(TokenType... types) {
@@ -357,10 +432,10 @@ class Parser {
     if (check(ttype))
       return advance();
 
-    throw error(peek(), message);
+    throw reportError(peek(), message);
   }
 
-  private ParseError error(Token t, String msg) {
+  private ParseError reportError(Token t, String msg) {
     Lox.error(t, msg);
     return new ParseError();
   }
