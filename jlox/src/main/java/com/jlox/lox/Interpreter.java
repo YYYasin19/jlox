@@ -61,9 +61,10 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
   @Override
   public Void visitFunStmt(Stmt.Fun stmt) {
-    // encountering a fun decl in the ast just registers that function in the
-    // environment
-    LoxFunction fun = new LoxFunction(stmt);
+    // use the current environment as the base for when the function is created
+    // that will allow the function to access all variables in there
+    // even when the function is returned from another function
+    LoxFunction fun = new LoxFunction(stmt, env);
     env.define(stmt.name.lexeme, fun);
     return null;
   }

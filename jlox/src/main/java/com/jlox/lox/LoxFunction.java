@@ -3,10 +3,12 @@ package com.jlox.lox;
 import java.util.List;
 
 class LoxFunction implements LoxCallable {
+  private final Environment closure;
   private final Stmt.Fun declaration;
 
-  LoxFunction(Stmt.Fun declaration) {
+  LoxFunction(Stmt.Fun declaration, Environment closure) {
     this.declaration = declaration;
+    this.closure = closure;
   }
 
   @Override
@@ -21,7 +23,7 @@ class LoxFunction implements LoxCallable {
 
   @Override
   public Object call(Interpreter interpreter, List<Object> args) {
-    Environment env = new Environment(interpreter.globals);
+    Environment env = closure;
 
     // add all given arguments to the environment
     for (int argIndex = 0; argIndex < declaration.params.size(); argIndex++) {
