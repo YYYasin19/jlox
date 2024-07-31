@@ -84,6 +84,14 @@ public class Lox {
     if (hadError)
       return;
 
+    // run the resolver to find all variables and their correct scopes
+    Resolver resolver = new Resolver(interpreter);
+    resolver.resolve(statements);
+
+    // don't interpret code if there were any resolution errors
+    if (hadError)
+      return;
+
     interpreter.interpret(statements);
   }
 

@@ -2,6 +2,8 @@ package com.jlox.lox;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 class ClockFn implements LoxCallable {
   @Override
@@ -26,6 +28,7 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
   boolean debugMode = false;
   final Environment globals = new Environment();
   private Environment env = globals; // env is a pointer to the current env, global always references the global env
+  private final Map<Expr, Integer> locals = new HashMap<>(); // for each Syntax Tree node stores the depth
 
   Interpreter() {
     globals.define("clock", new ClockFn());
@@ -47,6 +50,10 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
   private void execStatement(Stmt stmt) {
     stmt.accept(this);
+  }
+
+  void resolve(Expr expr, Integer depth) {
+    locals.put(expr, depth);
   }
 
   @Override
@@ -138,9 +145,16 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
   @Override
   public Object visitAssignExpr(Expr.Assign expr) {
-    Object evalValue = evaluate(expr.value);
-    env.assign(expr.name, evalValue);
-    return evalValue;
+    Object value = evaluate(expr.value);
+
+    Integer dist = locals.get(expr);
+    if (dist != null) {
+      env.assignAt(dist, expr.name, value);
+    } else {
+      globals.assign(expr.name, value);
+    }
+
+    return value;
   }
 
   @Override
@@ -156,7 +170,17 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
   @Override
   public Object visitVariableExpr(Expr.Variable expr) {
-    return env.get(expr.name);
+    return lookupVariable(expr.name, expr);
+  }
+
+  private Object lookupVariable(Token name, Expr expr) {
+    Integer dist = locals.get(expr);
+    if (dist != null) {
+      return env.getAt(dist, name.lexeme);
+    } else {
+      // if we don't find a distance, it must be a global variable
+      return globals.get(name);
+    }
   }
 
   @Override
