@@ -2,13 +2,15 @@ package com.jlox.lox;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Stack;
 
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   private final Interpreter interpreter;
-  private final Stack<Map<String, Boolean>> scopes = new Stack<>(); // stack to push and pop scopes
+  private final Stack<Map<String, VariableState>> scopes = new Stack<>(); // stack to push and pop scopes
+  private final List<String> notUsedVariables = new ArrayList<>();
   private FunctionType currentFun = FunctionType.NONE;
 
   Resolver(Interpreter interpreter) {
@@ -20,11 +22,19 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     FUNCTION
   }
 
+  private enum VariableState {
+    DECLARED,
+    DEFINED,
+    USED
+  }
+
   private void beginScope() {
-    scopes.push(new HashMap<String, Boolean>());
+    scopes.push(new HashMap<String, VariableState>());
   }
 
   private void endScope() {
+    // log any variables that go out of scope without being used
+    notUsedVariables.addAll(findUnusuedVariables());
     scopes.pop();
   }
 
@@ -32,6 +42,23 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     for (Stmt stmt : stmts) {
       resolve(stmt);
     }
+  }
+
+  // find all vars that have been defined/declared but not used in the scope
+  private List<String> findUnusuedVariables() {
+    List<String> unused = new ArrayList<>();
+    for (Map<String, VariableState> scope : scopes) {
+      for (Map.Entry<String, VariableState> entry : scope.entrySet()) {
+        if ((entry.getValue() == VariableState.DEFINED) || (entry.getValue() == VariableState.DECLARED)) {
+          unused.add(entry.getKey());
+        }
+      }
+    }
+    return unused;
+  }
+
+  List<String> reportUnusedVariables() {
+    return notUsedVariables;
   }
 
   private void resolve(Stmt stmt) {
@@ -52,6 +79,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       if (scopes.get(i).containsKey(name.lexeme)) {
 
         // resolve that particular scope
+        scopes.get(i).put(name.lexeme, VariableState.USED); // set the variable to 'used'
         interpreter.resolve(expr, scopes.size() - 1 - i);
         return;
       }
@@ -80,18 +108,18 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     if (scopes.isEmpty())
       return;
 
-    Map<String, Boolean> scope = scopes.peek();
+    Map<String, VariableState> scope = scopes.peek();
     if (scope.containsKey(name.lexeme)) {
       Lox.error(name, String.format("There is already a variable with the name '%s' in the scope", name.lexeme));
     }
-    scope.put(name.lexeme, false); // false == 'not ready yet'
+    scope.put(name.lexeme, VariableState.DECLARED); // false == 'not ready yet'
   }
 
   private void define(Token name) {
     if (scopes.empty())
       return;
 
-    scopes.peek().put(name.lexeme, true);
+    scopes.peek().put(name.lexeme, VariableState.DEFINED);
   }
 
   @Override
@@ -114,7 +142,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitVariableExpr(Expr.Variable expr) {
-    if ((!scopes.isEmpty()) && (scopes.peek().get(expr.name.lexeme) == Boolean.FALSE)) {
+    if ((!scopes.isEmpty()) && (scopes.peek().get(expr.name.lexeme) == VariableState.DECLARED)) {
       Lox.error(expr.name, String.format("Can't read local variable in it's own initializer"));
     }
 

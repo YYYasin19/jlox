@@ -88,6 +88,13 @@ public class Lox {
     Resolver resolver = new Resolver(interpreter);
     resolver.resolve(statements);
 
+    List<String> unusedVars = resolver.reportUnusedVariables();
+    if (unusedVars.size() > 0) {
+      for (String var : unusedVars) {
+        System.err.println(String.format("Warning: Variable '%s' is declared but never used.", var));
+      }
+    }
+
     // don't interpret code if there were any resolution errors
     if (hadError)
       return;
