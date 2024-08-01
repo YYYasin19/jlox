@@ -1,0 +1,13 @@
+class Dog {
+  bark() {
+    print "Woof woof!";
+  }
+
+  sit() {
+    print "Sitting down.";
+  }
+}
+
+var myDog = Dog();
+myDog.bark();
+myDog.sit();

@@ -19,7 +19,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   private enum FunctionType {
     NONE,
-    FUNCTION
+    FUNCTION,
+    METHOD
   }
 
   private enum VariableState {
@@ -162,6 +163,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visitClassStmt(Stmt.Class cls) {
     declare(cls.name);
     define(cls.name);
+
+    for (Stmt.Fun func : cls.methods) {
+      FunctionType ftype = FunctionType.METHOD;
+      resolveFunction(func, ftype);
+    }
 
     return null;
   }

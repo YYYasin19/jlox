@@ -21,6 +21,10 @@ class LoxInstance {
             return fields.get(attributeName.lexeme);
         }
 
+        LoxFunction method = this.cls.findMethod(attributeName.lexeme);
+        if (method != null)
+            return method;
+
         throw new RuntimeError(attributeName, String.format("Unknown property %s on %s", attributeName.lexeme, this));
     }
 
