@@ -11,3 +11,9 @@ class Dog {
 var myDog = Dog();
 myDog.bark();
 myDog.sit();
+
+// we can also move methods around
+class Cat {}
+var myCat = Cat();
+myCat.bark = myDog.bark;
+myCat.bark();

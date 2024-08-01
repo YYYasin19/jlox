@@ -16,7 +16,7 @@ public class GenerateAst {
     defineAst(outputDir, "Expr", Arrays.asList(
         "Assign: Token name, Expr value",
         "Binary: Expr left, Token operator, Expr right",
-        "Call: Expr callee, Token parenthesis, List<Expr> args",
+        "Call: Expr callee, Token parenthesis, List<Expr> args", // the parenthesis token is stored for debugging info
         "Get: Expr object, Token name",
         "Grouping: Expr expression",
         "Literal: Object value",

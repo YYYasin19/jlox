@@ -13,7 +13,7 @@ class LoxInstance {
 
     @Override
     public String toString() {
-        return String.format("<% instance>", cls.name);
+        return String.format("<%s instance>", cls.name);
     }
 
     Object get(Token attributeName) {
@@ -25,7 +25,7 @@ class LoxInstance {
         if (method != null)
             return method;
 
-        throw new RuntimeError(attributeName, String.format("Unknown property %s on %s", attributeName.lexeme, this));
+        throw new RuntimeError(attributeName, String.format("Unknown property '%s' on %s", attributeName.lexeme, this));
     }
 
     void set(Token attributeName, Object value) {
