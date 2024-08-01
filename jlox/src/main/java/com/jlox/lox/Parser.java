@@ -41,6 +41,8 @@ class Parser {
 
   private Stmt declaration() {
     try {
+      if (matchAndAdvance(CLASS))
+        return classDecl();
       if (matchAndAdvance(FUN))
         return function("function");
       if (matchAndAdvance(VAR))
@@ -50,6 +52,19 @@ class Parser {
       synchronize();
       return null;
     }
+  }
+
+  private Stmt.Class classDecl() {
+    Token className = consume(IDENTIFIER, "Expected class name");
+    consume(LEFT_BRACE, "Expected left curly brace '{' before class definition");
+
+    List<Stmt.Fun> methods = new ArrayList<>();
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
+      methods.add(function("method"));
+    }
+
+    consume(RIGHT_BRACE, "Expected right curly brace '}' after class definition.");
+    return new Stmt.Class(className, methods);
   }
 
   /*
@@ -246,6 +261,9 @@ class Parser {
       if (expr instanceof Expr.Variable) {
         Token variableName = ((Expr.Variable) expr).name;
         return new Expr.Assign(variableName, rvalue);
+      } else if (expr instanceof Expr.Get) {
+        Expr.Get get = (Expr.Get) expr;
+        return new Expr.Set(get, get.name, rvalue);
       }
 
       reportError(eq, String.format("Invalid assignment target: %s", expr.toString()));
@@ -366,6 +384,9 @@ class Parser {
     while (true) {
       if (matchAndAdvance(LEFT_PAR)) {
         expr = finishCall(expr);
+      } else if (matchAndAdvance(DOT)) {
+        Token name = consume(IDENTIFIER, "Expected property name after '.'");
+        expr = new Expr.Get(expr, name); // e.g. myObject.a oder myInstance.methodName
       } else {
         break;
       }

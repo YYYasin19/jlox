@@ -78,9 +78,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       // until the variable is found
       if (scopes.get(i).containsKey(name.lexeme)) {
 
-        // resolve that particular scope
-        scopes.get(i).put(name.lexeme, VariableState.USED); // set the variable to 'used'
-        interpreter.resolve(expr, scopes.size() - 1 - i);
+        // add the variable to the local scope for the interpreter
+        // also: mark it as 'used' for our static analysis
+        scopes.get(i).put(name.lexeme, VariableState.USED);
+        interpreter.resolveToLocals(expr, scopes.size() - 1 - i);
         return;
       }
     }
@@ -158,6 +159,14 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visitClassStmt(Stmt.Class cls) {
+    declare(cls.name);
+    define(cls.name);
+
+    return null;
+  }
+
+  @Override
   public Void visitFunStmt(Stmt.Fun fun) {
     declare(fun.name);
     define(fun.name);
@@ -223,6 +232,19 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       resolve(argument);
     }
 
+    return null;
+  }
+
+  @Override
+  public Void visitGetExpr(Expr.Get expr) {
+    resolve(expr.object); // only resolve the left-hand side, not the accessed property
+    return null;
+  }
+
+  @Override
+  public Void visitSetExpr(Expr.Set expr) {
+    resolve(expr.object);
+    resolve(expr.value); // also resolve the right-hand side
     return null;
   }
 

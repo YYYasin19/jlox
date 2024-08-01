@@ -52,7 +52,7 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
     stmt.accept(this);
   }
 
-  void resolve(Expr expr, Integer depth) {
+  void resolveToLocals(Expr expr, Integer depth) {
     locals.put(expr, depth);
   }
 
@@ -63,6 +63,14 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
     } else if (stmt.elseBranch != null) {
       execStatement(stmt.elseBranch);
     }
+    return null;
+  }
+
+  @Override
+  public Void visitClassStmt(Stmt.Class stmt) {
+    env.define(stmt.name.lexeme, null);
+    LoxClass cls = new LoxClass(stmt.name.lexeme);
+    env.assign(stmt.name, cls);
     return null;
   }
 
@@ -133,6 +141,34 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
     }
 
     return fun.call(this, args);
+  }
+
+  @Override
+  public Object visitGetExpr(Expr.Get expr) {
+    // Example: myObject.attribute with Expr [object][name]
+    Object obj = evaluate(expr.object);
+    if (obj instanceof LoxInstance) {
+      return ((LoxInstance) obj).get(expr.name);
+    }
+
+    throw new RuntimeError(expr.name,
+        String.format("Tried to access %s on %s but %s it not an instance object", expr.name, obj, obj));
+  }
+
+  @Override
+  public Object visitSetExpr(Expr.Set expr) {
+    // Example: myInstance.attribute1.field = sum([1,2,3])
+    // with [object].[name] = [value]
+    Object obj = evaluate(expr.object);
+    if (!(obj instanceof LoxInstance)) {
+      throw new RuntimeError(expr.name,
+          String.format("Cannot set fields on variables (%s) that are not instances", expr.name));
+    }
+
+    Object rvalue = evaluate(expr.value);
+    ((LoxInstance) obj).set(expr.name, rvalue);
+    return rvalue;
+
   }
 
   @Override
