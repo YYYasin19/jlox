@@ -418,6 +418,8 @@ class Parser {
       return new Expr.Literal(false);
     if (matchAndAdvance(TRUE))
       return new Expr.Literal(true);
+    if (matchAndAdvance(THIS))
+      return new Expr.This(prevToken());
     if (matchAndAdvance(NIL))
       return new Expr.Literal(null);
 

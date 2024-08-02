@@ -179,6 +179,11 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
   }
 
   @Override
+  public Object visitThisExpr(Expr.This expr) {
+    return lookupVariable(expr.keyword, expr);
+  }
+
+  @Override
   public Void visitBlockStmt(Stmt.Block stmt) {
 
     // eval the block passing the current env down (as a lookup for variables)

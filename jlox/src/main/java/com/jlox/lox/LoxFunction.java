@@ -38,4 +38,11 @@ class LoxFunction implements LoxCallable {
     }
     return null;
   }
+
+  LoxFunction bind(LoxInstance instance) {
+    // capture the current functions environment
+    Environment env = new Environment(closure);
+    env.define("this", instance); // add 'this' to the current env
+    return new LoxFunction(declaration, env); // return a new function with the updated environment
+  }
 }

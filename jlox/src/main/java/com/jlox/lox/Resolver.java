@@ -12,6 +12,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   private final Stack<Map<String, VariableState>> scopes = new Stack<>(); // stack to push and pop scopes
   private final List<String> notUsedVariables = new ArrayList<>();
   private FunctionType currentFun = FunctionType.NONE;
+  private ClassType currentClass = ClassType.NONE;
 
   Resolver(Interpreter interpreter) {
     this.interpreter = interpreter;
@@ -21,6 +22,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     NONE,
     FUNCTION,
     METHOD
+  }
+
+  private enum ClassType {
+    NONE,
+    CLASS
   }
 
   private enum VariableState {
@@ -161,14 +167,20 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitClassStmt(Stmt.Class cls) {
+    ClassType enclosingClass = currentClass;
+    currentClass = ClassType.CLASS;
     declare(cls.name);
     define(cls.name);
 
+    beginScope();
+    scopes.peek().put("this", VariableState.USED); // 'this' does not need to be used explicitly
     for (Stmt.Fun func : cls.methods) {
       FunctionType ftype = FunctionType.METHOD;
       resolveFunction(func, ftype);
     }
+    endScope();
 
+    currentClass = enclosingClass;
     return null;
   }
 
@@ -251,6 +263,14 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visitSetExpr(Expr.Set expr) {
     resolve(expr.object);
     resolve(expr.value); // also resolve the right-hand side
+    return null;
+  }
+
+  @Override
+  public Void visitThisExpr(Expr.This expr) {
+    if (currentClass != ClassType.CLASS)
+      Lox.error(expr.keyword, "Cannot use 'this' outside of methods");
+    resolveLocal(expr, expr.keyword);
     return null;
   }
 
