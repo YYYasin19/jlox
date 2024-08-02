@@ -1,0 +1,8 @@
+class Hello {
+    run() {
+        print this; // should print a reference to the instance
+    }
+}
+
+var h = Hello();
+h.run();
