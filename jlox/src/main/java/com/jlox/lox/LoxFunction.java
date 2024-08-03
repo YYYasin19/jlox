@@ -25,16 +25,15 @@ class LoxFunction implements LoxCallable {
 
   @Override
   public Object call(Interpreter interpreter, List<Object> args) {
-    Environment env = closure;
+    Environment localFuncEnvironment = new Environment(closure);
 
-    // add all given arguments to the environment
     for (int argIndex = 0; argIndex < declaration.params.size(); argIndex++) {
       // bind concrete argument for the call to the name of the param at this position
-      env.define(declaration.params.get(argIndex).lexeme, args.get(argIndex));
+      localFuncEnvironment.define(declaration.params.get(argIndex).lexeme, args.get(argIndex));
     }
 
     try {
-      interpreter.evaluateBlock(declaration.body, env);
+      interpreter.evaluateBlock(declaration.body, localFuncEnvironment);
     } catch (Return r) {
       // in 'init' an empty return will return 'this'
       if (isInit)

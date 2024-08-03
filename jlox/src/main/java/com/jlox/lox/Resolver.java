@@ -125,7 +125,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   private void define(Token name) {
-    if (scopes.empty())
+    if (scopes.isEmpty())
       return;
 
     scopes.peek().put(name.lexeme, VariableState.DEFINED);
