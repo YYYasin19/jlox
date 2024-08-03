@@ -5,10 +5,12 @@ import java.util.List;
 class LoxFunction implements LoxCallable {
   private final Environment closure;
   private final Stmt.Fun declaration;
+  private final Boolean isInit;
 
-  LoxFunction(Stmt.Fun declaration, Environment closure) {
+  LoxFunction(Stmt.Fun declaration, Environment closure, Boolean isInit) {
     this.declaration = declaration;
     this.closure = closure;
+    this.isInit = isInit;
   }
 
   @Override
@@ -34,8 +36,15 @@ class LoxFunction implements LoxCallable {
     try {
       interpreter.evaluateBlock(declaration.body, env);
     } catch (Return r) {
+      // in 'init' an empty return will return 'this'
+      if (isInit)
+        return closure.getAt(0, "this");
       return r.value; // evaluated expression or null
     }
+
+    if (isInit)
+      return closure.getAt(0, "this");
+
     return null;
   }
 
@@ -43,6 +52,6 @@ class LoxFunction implements LoxCallable {
     // capture the current functions environment
     Environment env = new Environment(closure);
     env.define("this", instance); // add 'this' to the current env
-    return new LoxFunction(declaration, env); // return a new function with the updated environment
+    return new LoxFunction(declaration, env, isInit); // return a new function with the updated environment
   }
 }

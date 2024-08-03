@@ -72,7 +72,7 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
 
     Map<String, LoxFunction> methods = new HashMap<>();
     for (Stmt.Fun func : stmt.methods) {
-      LoxFunction f = new LoxFunction(func, env);
+      LoxFunction f = new LoxFunction(func, env, func.name.lexeme.equals("init"));
       methods.put(func.name.lexeme, f);
     }
 
@@ -86,7 +86,7 @@ class Interpreter implements Stmt.Visitor<Void>, Expr.Visitor<Object> {
     // use the current environment as the base for when the function is created
     // that will allow the function to access all variables in there
     // even when the function is returned from another function
-    LoxFunction fun = new LoxFunction(stmt, env);
+    LoxFunction fun = new LoxFunction(stmt, env, false);
     env.define(stmt.name.lexeme, fun);
     return null;
   }
